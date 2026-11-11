@@ -38,7 +38,7 @@ jobs:
           {
             echo 'Automatic Android build failed. Last 120 lines of Gradle output:'
             echo '~~~'
-            tail -n 120 build.log 2>/dev/null || echo 'No Gradle log available'
+            grep -n -E -A 18 -B 12 'FAILURE:|What went wrong:|Execution failed|Caused by:|^e: |^error:|A failure occurred|Could not|failed' build.log | head -n 180 || tail -n 100 build.log
             echo '~~~'
           } > failure-report.md
           gh issue create --title "Android build failure (run ${{ github.run_number }})" --body-file failure-report.md || true

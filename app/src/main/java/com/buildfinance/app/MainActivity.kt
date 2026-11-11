@@ -57,8 +57,16 @@ class MainActivity:Activity(){
  private fun sectionLink(s:String,link:String,action:()->Unit){val r=row();r.addView(text(s,19f,navy,true),LinearLayout.LayoutParams(0,-2,1f));r.addView(text(link+"  ›",12f,muted).apply{setOnClickListener{action()}});add(body,r,25)}
  private fun render(){
   val shell=col().apply{setBackgroundColor(bg);clipChildren=false;clipToPadding=false}
-  // Reserve status-bar clearance even on devices using edge-to-edge layouts.
-  shell.setPadding(0,dp(25),0,0)
+  if(android.os.Build.VERSION.SDK_INT>=30){
+   window.setDecorFitsSystemWindows(false)
+   shell.setOnApplyWindowInsetsListener{view,insets->
+    val bars=insets.getInsets(android.view.WindowInsets.Type.statusBars() or android.view.WindowInsets.Type.navigationBars())
+    view.setPadding(0,bars.top,0,bars.bottom)
+    insets
+   }
+  }else{
+   shell.fitsSystemWindows=true
+  }
   setContentView(shell)
   val head=row().apply{setPadding(dp(20),dp(14),dp(20),dp(12))}
   val logo=android.widget.ImageView(this).apply{setImageResource(com.buildfinance.app.R.drawable.ic_brand);scaleType=android.widget.ImageView.ScaleType.FIT_CENTER}
@@ -74,11 +82,11 @@ class MainActivity:Activity(){
   scroll.addView(body)
   shell.addView(scroll,LinearLayout.LayoutParams(-1,0,1f))
   when(page){0->dashboard();1->projects();2->operations();else->analytics()}
-  val nav=row().apply{setPadding(dp(8),dp(7),dp(8),dp(8));setBackgroundColor(Color.WHITE)}
+  val nav=row().apply{setPadding(dp(12),dp(5),dp(12),dp(6));setBackgroundColor(Color.WHITE)}
   val names=arrayOf("⌂\nГлавная","▱\nОбъекты","⇄\nОперации","▥\nОтчёты")
   for(i in names.indices){
    val item=text(names[i],12f,if(i==page)blue else muted,i==page).apply{gravity=Gravity.CENTER;background=touch(if(i==page)Color.rgb(235,241,255) else Color.WHITE,13);setOnClickListener{page=i;render()}}
-   nav.addView(item,LinearLayout.LayoutParams(0,dp(58),1f).apply{marginStart=dp(3);marginEnd=dp(3)})
+   nav.addView(item,LinearLayout.LayoutParams(0,dp(51),1f).apply{marginStart=dp(2);marginEnd=dp(2)})
   }
   add(shell,nav)
  }
@@ -91,7 +99,7 @@ class MainActivity:Activity(){
   top.addView(text("ОБЩИЙ БАЛАНС",12f,Color.rgb(183,199,222),true),LinearLayout.LayoutParams(0,-2,1f))
   top.addView(text("▥",21f,gold,true))
   add(hero,top)
-  add(hero,text(eur(income-spent),33f,Color.WHITE,true),12)
+  add(hero,text(eur(income-spent),30f,Color.WHITE,true),9)
   add(hero,text("По всем строительным объектам",12f,Color.rgb(183,199,222)),5)
   val line=View(this).apply{setBackgroundColor(Color.rgb(66,79,99))}
   hero.addView(line,LinearLayout.LayoutParams(-1,dp(1)).apply{topMargin=dp(20);bottomMargin=dp(15)})
@@ -112,7 +120,7 @@ class MainActivity:Activity(){
    add(c,text(symbol,25f,if(index==0)Color.WHITE else navy,true).apply{gravity=Gravity.CENTER})
    add(c,text(label,11f,if(index==0)Color.WHITE else navy,true).apply{gravity=Gravity.CENTER},7)
    c.setOnClickListener{when(index){0->edit();1->{page=1;render()};2->{page=3;render()};else->edit(defaultCategory="Материалы")}}
-   actions.addView(c,LinearLayout.LayoutParams(0,dp(91),1f).apply{marginStart=dp(4);marginEnd=dp(4)})
+   actions.addView(c,LinearLayout.LayoutParams(0,dp(78),1f).apply{marginStart=dp(4);marginEnd=dp(4)})
   }
   add(body,actions,17)
   sectionLink("Объекты","Все объекты"){page=1;render()}

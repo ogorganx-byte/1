@@ -7,6 +7,8 @@ import android.database.sqlite.*
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.RippleDrawable
+import android.content.res.ColorStateList
 import android.view.*
 import android.widget.*
 import java.text.NumberFormat
@@ -33,10 +35,12 @@ class MainActivity:Activity(){
  private val money=NumberFormat.getCurrencyInstance(Locale.GERMANY)
  private fun dp(n:Int)=(n*resources.displayMetrics.density+0.5f).toInt()
  private fun shape(color:Int,r:Int=18)=GradientDrawable().apply{setColor(color);cornerRadius=dp(r).toFloat()}
+ private fun outlined(color:Int,r:Int=18)=GradientDrawable().apply{setColor(color);cornerRadius=dp(r).toFloat();setStroke(dp(1),Color.rgb(234,238,244))}
+ private fun touch(color:Int,r:Int=18)=RippleDrawable(ColorStateList.valueOf(Color.argb(35,64,108,200)),outlined(color,r),null)
  private fun col()=LinearLayout(this).apply{orientation=1}
  private fun row()=LinearLayout(this).apply{orientation=0;gravity=Gravity.CENTER_VERTICAL}
  private fun text(s:String,size:Float=15f,color:Int=navy,bold:Boolean=false)=TextView(this).apply{text=s;textSize=size;setTextColor(color);gravity=Gravity.CENTER_VERTICAL;if(bold)setTypeface(null,Typeface.BOLD)}
- private fun card()=col().apply{background=shape(Color.WHITE,20);setPadding(dp(17),dp(17),dp(17),dp(17));elevation=dp(1).toFloat()}
+ private fun card()=col().apply{background=outlined(Color.WHITE,20);setPadding(dp(17),dp(17),dp(17),dp(17));clipToOutline=true}
  private fun add(p:LinearLayout,v:View,top:Int=0){p.addView(v,LinearLayout.LayoutParams(-1,-2).apply{topMargin=dp(top)})}
  private fun records():List<Operation>{
   val result=mutableListOf<Operation>()
@@ -46,13 +50,15 @@ class MainActivity:Activity(){
   return result
  }
  private fun eur(n:Double)=money.format(n)
- override fun onCreate(state:Bundle?){super.onCreate(state);db=FinanceDb(this);window.statusBarColor=bg;window.navigationBarColor=bg;window.decorView.systemUiVisibility=View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;render()}
+ override fun onCreate(state:Bundle?){super.onCreate(state);db=FinanceDb(this);window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS or android.view.WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);window.statusBarColor=bg;window.navigationBarColor=bg;window.decorView.systemUiVisibility=View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;render()}
  private fun button(label:String,action:()->Unit)=text(label,16f,Color.WHITE,true).apply{gravity=Gravity.CENTER;background=shape(blue,15);setPadding(dp(12),dp(16),dp(12),dp(16));setOnClickListener{action()}}
  private fun title(s:String){add(body,text(s,22f,navy,true),12)}
  private fun section(s:String){add(body,text(s,19f,navy,true),25)}
  private fun sectionLink(s:String,link:String,action:()->Unit){val r=row();r.addView(text(s,19f,navy,true),LinearLayout.LayoutParams(0,-2,1f));r.addView(text(link+"  ›",12f,muted).apply{setOnClickListener{action()}});add(body,r,25)}
  private fun render(){
-  val shell=col().apply{setBackgroundColor(bg)}
+  val shell=col().apply{setBackgroundColor(bg);clipChildren=false;clipToPadding=false}
+  // Reserve status-bar clearance even on devices using edge-to-edge layouts.
+  shell.setPadding(0,dp(25),0,0)
   setContentView(shell)
   val head=row().apply{setPadding(dp(20),dp(14),dp(20),dp(12))}
   val logo=android.widget.ImageView(this).apply{setImageResource(com.buildfinance.app.R.drawable.ic_brand);scaleType=android.widget.ImageView.ScaleType.FIT_CENTER}
@@ -63,15 +69,15 @@ class MainActivity:Activity(){
   head.addView(brand,LinearLayout.LayoutParams(0,-2,1f))
   head.addView(text("⋯",30f,navy,true).apply{gravity=Gravity.CENTER;setOnClickListener{options()}},LinearLayout.LayoutParams(dp(45),dp(45)))
   add(shell,head)
-  val scroll=ScrollView(this)
+  val scroll=ScrollView(this).apply{clipToPadding=false;clipChildren=false;isFillViewport=true;overScrollMode=View.OVER_SCROLL_IF_CONTENT_SCROLLS}
   body=col().apply{setPadding(dp(20),dp(5),dp(20),dp(28))}
   scroll.addView(body)
   shell.addView(scroll,LinearLayout.LayoutParams(-1,0,1f))
   when(page){0->dashboard();1->projects();2->operations();else->analytics()}
-  val nav=row().apply{setPadding(dp(8),dp(8),dp(8),dp(10));setBackgroundColor(Color.WHITE)}
+  val nav=row().apply{setPadding(dp(8),dp(7),dp(8),dp(8));setBackgroundColor(Color.WHITE)}
   val names=arrayOf("⌂\nГлавная","▱\nОбъекты","⇄\nОперации","▥\nОтчёты")
   for(i in names.indices){
-   val item=text(names[i],12f,if(i==page)blue else muted,i==page).apply{gravity=Gravity.CENTER;if(i==page)background=shape(Color.rgb(235,241,255),13);setOnClickListener{page=i;render()}}
+   val item=text(names[i],12f,if(i==page)blue else muted,i==page).apply{gravity=Gravity.CENTER;background=touch(if(i==page)Color.rgb(235,241,255) else Color.WHITE,13);setOnClickListener{page=i;render()}}
    nav.addView(item,LinearLayout.LayoutParams(0,dp(58),1f).apply{marginStart=dp(3);marginEnd=dp(3)})
   }
   add(shell,nav)
@@ -100,12 +106,12 @@ class MainActivity:Activity(){
   add(hero,stats)
   add(body,hero,12)
   val actions=row()
-  val actionNames=listOf(Triple("＋","Операция",0),Triple("▱","Объект",1),Triple("♙","Работники",2),Triple("▣","Материалы",3))
+  val actionNames=listOf(Triple("＋","Операция",0),Triple("▱","Объекты",1),Triple("♙","Работники",2),Triple("▣","Материалы",3))
   for((symbol,label,index) in actionNames){
-   val c=col().apply{background=shape(if(index==0)navy else Color.WHITE,17);setPadding(dp(5),dp(15),dp(5),dp(14));gravity=Gravity.CENTER;elevation=dp(1).toFloat()}
+   val c=col().apply{background=touch(if(index==0)navy else Color.WHITE,17);setPadding(dp(5),dp(15),dp(5),dp(14));gravity=Gravity.CENTER}
    add(c,text(symbol,25f,if(index==0)Color.WHITE else navy,true).apply{gravity=Gravity.CENTER})
    add(c,text(label,11f,if(index==0)Color.WHITE else navy,true).apply{gravity=Gravity.CENTER},7)
-   c.setOnClickListener{when(index){0->edit();1->{page=1;render()};2->{page=3;render()};else->edit()}}
+   c.setOnClickListener{when(index){0->edit();1->{page=1;render()};2->{page=3;render()};else->edit(defaultCategory="Материалы")}}
    actions.addView(c,LinearLayout.LayoutParams(0,dp(91),1f).apply{marginStart=dp(4);marginEnd=dp(4)})
   }
   add(body,actions,17)
@@ -117,7 +123,7 @@ class MainActivity:Activity(){
   if(list.isEmpty())empty("Пока нет операций","Доходы и расходы появятся здесь.")
   else list.take(5).forEach{operationCard(it)}
  }
- private fun empty(a:String,b:String){val c=card();add(c,text(a,16f,navy,true));add(c,text(b,13f,muted),7);add(body,c,10)}
+ private fun empty(a:String,b:String){val c=card();add(c,text(a,16f,navy,true));add(c,text(b,13f,muted),7);add(body,c,12)}
  private fun projectCard(name:String,list:List<Operation>){
   val ops=list.filter{it.project==name}
   val income=ops.filter{it.kind=="Доход"}.sumOf{it.amount}
@@ -130,6 +136,7 @@ class MainActivity:Activity(){
   strip.addView(text("Доходы  "+eur(income),12f,green,true),LinearLayout.LayoutParams(0,-2,1f))
   strip.addView(text("Расходы  "+eur(spent),12f,red,true))
   add(c,strip,12)
+  c.background=touch(Color.WHITE,20)
   c.setOnClickListener{filter=name;page=2;render()}
   add(body,c,10)
  }
@@ -176,6 +183,7 @@ class MainActivity:Activity(){
   r.addView(info,LinearLayout.LayoutParams(0,-2,1f))
   r.addView(text((if(e.kind=="Доход")"+" else "−")+eur(e.amount),14f,color,true))
   add(c,r)
+  c.background=touch(Color.WHITE,20)
   c.setOnClickListener{edit(e)}
   add(body,c,9)
  }
@@ -206,13 +214,13 @@ class MainActivity:Activity(){
   }
  }
  private fun input(hint:String,value:String="")=EditText(this).apply{this.hint=hint;setText(value);setSingleLine(true);textSize=15f}
- private fun edit(old:Operation?=null){
+ private fun edit(old:Operation?=null,defaultCategory:String="Материалы"){
   val box=col().apply{setPadding(dp(24),dp(5),dp(24),0)}
   val types=arrayOf("Расход","Доход")
   val kind=Spinner(this).apply{adapter=ArrayAdapter(this@MainActivity,android.R.layout.simple_spinner_dropdown_item,types);setSelection(types.indexOf(old?.kind?:"Расход"))}
   add(box,text("Тип операции",12f,muted));add(box,kind)
   val categories=arrayOf("Материалы","Работники","Транспорт","Инструменты","Прочее","Оплата клиента","Аванс клиента")
-  val category=Spinner(this).apply{adapter=ArrayAdapter(this@MainActivity,android.R.layout.simple_spinner_dropdown_item,categories);setSelection(categories.indexOf(old?.category?:"Материалы").coerceAtLeast(0))}
+  val category=Spinner(this).apply{adapter=ArrayAdapter(this@MainActivity,android.R.layout.simple_spinner_dropdown_item,categories);setSelection(categories.indexOf(old?.category?:defaultCategory).coerceAtLeast(0))}
   add(box,text("Категория",12f,muted),9);add(box,category)
   val project=input("Объект / адрес",old?.project?:"")
   val note=input("Описание / имя работника",old?.note?:"")

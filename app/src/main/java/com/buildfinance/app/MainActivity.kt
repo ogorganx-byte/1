@@ -28,14 +28,15 @@ class MainActivity:Activity(){
  private val green=Color.rgb(14,148,108)
  private val red=Color.rgb(215,74,91)
  private val muted=Color.rgb(111,126,146)
- private val bg=Color.rgb(246,248,252)
+ private val bg=Color.rgb(249,250,253)
+ private val gold=Color.rgb(204,169,113)
  private val money=NumberFormat.getCurrencyInstance(Locale.GERMANY)
  private fun dp(n:Int)=(n*resources.displayMetrics.density+0.5f).toInt()
  private fun shape(color:Int,r:Int=18)=GradientDrawable().apply{setColor(color);cornerRadius=dp(r).toFloat()}
  private fun col()=LinearLayout(this).apply{orientation=1}
  private fun row()=LinearLayout(this).apply{orientation=0;gravity=Gravity.CENTER_VERTICAL}
  private fun text(s:String,size:Float=15f,color:Int=navy,bold:Boolean=false)=TextView(this).apply{text=s;textSize=size;setTextColor(color);gravity=Gravity.CENTER_VERTICAL;if(bold)setTypeface(null,Typeface.BOLD)}
- private fun card()=col().apply{background=shape(Color.WHITE,20);setPadding(dp(17),dp(17),dp(17),dp(17));elevation=dp(2).toFloat()}
+ private fun card()=col().apply{background=shape(Color.WHITE,20);setPadding(dp(17),dp(17),dp(17),dp(17));elevation=dp(1).toFloat()}
  private fun add(p:LinearLayout,v:View,top:Int=0){p.addView(v,LinearLayout.LayoutParams(-1,-2).apply{topMargin=dp(top)})}
  private fun records():List<Operation>{
   val result=mutableListOf<Operation>()
@@ -48,24 +49,27 @@ class MainActivity:Activity(){
  override fun onCreate(state:Bundle?){super.onCreate(state);db=FinanceDb(this);window.statusBarColor=bg;window.navigationBarColor=bg;window.decorView.systemUiVisibility=View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;render()}
  private fun button(label:String,action:()->Unit)=text(label,16f,Color.WHITE,true).apply{gravity=Gravity.CENTER;background=shape(blue,15);setPadding(dp(12),dp(16),dp(12),dp(16));setOnClickListener{action()}}
  private fun title(s:String){add(body,text(s,22f,navy,true),12)}
- private fun section(s:String){add(body,text(s,19f,navy,true),23)}
+ private fun section(s:String){add(body,text(s,19f,navy,true),25)}
+ private fun sectionLink(s:String,link:String,action:()->Unit){val r=row();r.addView(text(s,19f,navy,true),LinearLayout.LayoutParams(0,-2,1f));r.addView(text(link+"  ›",12f,muted).apply{setOnClickListener{action()}});add(body,r,25)}
  private fun render(){
   val shell=col().apply{setBackgroundColor(bg)}
   setContentView(shell)
-  val head=row().apply{setPadding(dp(20),dp(18),dp(20),dp(10))}
+  val head=row().apply{setPadding(dp(20),dp(14),dp(20),dp(12))}
+  val logo=android.widget.ImageView(this).apply{setImageResource(com.buildfinance.app.R.drawable.ic_brand);scaleType=android.widget.ImageView.ScaleType.FIT_CENTER}
+  head.addView(logo,LinearLayout.LayoutParams(dp(39),dp(43)).apply{marginEnd=dp(12)})
   val brand=col()
-  brand.addView(text("BUILD FINANCE",22f,navy,true))
+  brand.addView(text("BUILD FINANCE",20f,navy,true))
   brand.addView(text("Управление финансами",12f,muted))
   head.addView(brand,LinearLayout.LayoutParams(0,-2,1f))
   head.addView(text("⋯",30f,navy,true).apply{gravity=Gravity.CENTER;setOnClickListener{options()}},LinearLayout.LayoutParams(dp(45),dp(45)))
   add(shell,head)
   val scroll=ScrollView(this)
-  body=col().apply{setPadding(dp(18),dp(6),dp(18),dp(22))}
+  body=col().apply{setPadding(dp(20),dp(5),dp(20),dp(28))}
   scroll.addView(body)
   shell.addView(scroll,LinearLayout.LayoutParams(-1,0,1f))
   when(page){0->dashboard();1->projects();2->operations();else->analytics()}
   val nav=row().apply{setPadding(dp(8),dp(8),dp(8),dp(10));setBackgroundColor(Color.WHITE)}
-  val names=arrayOf("⌂\nГлавная","▦\nОбъекты","≡\nОперации","◴\nОтчёты")
+  val names=arrayOf("⌂\nГлавная","▱\nОбъекты","⇄\nОперации","▥\nОтчёты")
   for(i in names.indices){
    val item=text(names[i],12f,if(i==page)blue else muted,i==page).apply{gravity=Gravity.CENTER;if(i==page)background=shape(Color.rgb(235,241,255),13);setOnClickListener{page=i;render()}}
    nav.addView(item,LinearLayout.LayoutParams(0,dp(58),1f).apply{marginStart=dp(3);marginEnd=dp(3)})
@@ -76,25 +80,40 @@ class MainActivity:Activity(){
   val list=records()
   val income=list.filter{it.kind=="Доход"}.sumOf{it.amount}
   val spent=list.filter{it.kind!="Доход"}.sumOf{it.amount}
-  val hero=col().apply{background=shape(navy,23);setPadding(dp(22),dp(23),dp(22),dp(23))}
-  add(hero,text("ОБЩИЙ БАЛАНС",12f,Color.rgb(176,194,222),true))
-  add(hero,text(eur(income-spent),31f,Color.WHITE,true),8)
-  add(hero,text("По всем строительным объектам",12f,Color.rgb(176,194,222)),7)
-  add(body,hero,13)
+  val hero=col().apply{background=shape(navy,24);setPadding(dp(23),dp(23),dp(23),dp(23))}
+  val top=row()
+  top.addView(text("ОБЩИЙ БАЛАНС",12f,Color.rgb(183,199,222),true),LinearLayout.LayoutParams(0,-2,1f))
+  top.addView(text("▥",21f,gold,true))
+  add(hero,top)
+  add(hero,text(eur(income-spent),33f,Color.WHITE,true),12)
+  add(hero,text("По всем строительным объектам",12f,Color.rgb(183,199,222)),5)
+  val line=View(this).apply{setBackgroundColor(Color.rgb(66,79,99))}
+  hero.addView(line,LinearLayout.LayoutParams(-1,dp(1)).apply{topMargin=dp(20);bottomMargin=dp(15)})
   val stats=row()
-  for((label,value,color) in listOf(Triple("↙ Доходы",income,green),Triple("↗ Расходы",spent,red))){
-   val c=card()
-   add(c,text(label,12f,muted))
-   add(c,text(eur(value),18f,color,true),8)
-   stats.addView(c,LinearLayout.LayoutParams(0,-2,1f).apply{marginStart=dp(5);marginEnd=dp(5)})
+  val figures=listOf(Triple("ОБЪЕКТЫ",list.map{it.project}.distinct().size.toString(),Color.WHITE),Triple("ДОХОДЫ",eur(income),Color.rgb(112,221,180)),Triple("РАСХОДЫ",eur(spent),Color.rgb(255,157,163)))
+  for((name,value,color) in figures){
+   val box=col()
+   add(box,text(value,15f,color,true))
+   add(box,text(name,10f,Color.rgb(183,199,222)),5)
+   stats.addView(box,LinearLayout.LayoutParams(0,-2,1f))
   }
-  add(body,stats,14)
-  add(body,button("＋  Добавить операцию"){edit()},18)
-  section("Объекты")
+  add(hero,stats)
+  add(body,hero,12)
+  val actions=row()
+  val actionNames=listOf(Triple("＋","Операция",0),Triple("▱","Объект",1),Triple("♙","Работники",2),Triple("▣","Материалы",3))
+  for((symbol,label,index) in actionNames){
+   val c=col().apply{background=shape(if(index==0)navy else Color.WHITE,17);setPadding(dp(5),dp(15),dp(5),dp(14));gravity=Gravity.CENTER;elevation=dp(1).toFloat()}
+   add(c,text(symbol,25f,if(index==0)Color.WHITE else navy,true).apply{gravity=Gravity.CENTER})
+   add(c,text(label,11f,if(index==0)Color.WHITE else navy,true).apply{gravity=Gravity.CENTER},7)
+   c.setOnClickListener{when(index){0->edit();1->{page=1;render()};2->{page=3;render()};else->edit()}}
+   actions.addView(c,LinearLayout.LayoutParams(0,dp(91),1f).apply{marginStart=dp(4);marginEnd=dp(4)})
+  }
+  add(body,actions,17)
+  sectionLink("Объекты","Все объекты"){page=1;render()}
   val names=list.map{it.project}.distinct()
   if(names.isEmpty())empty("Нет объектов","Добавь первую операцию, чтобы начать учёт.")
   else names.take(3).forEach{projectCard(it,list)}
-  section("Последние операции")
+  sectionLink("Последние операции","Все операции"){page=2;render()}
   if(list.isEmpty())empty("Пока нет операций","Доходы и расходы появятся здесь.")
   else list.take(5).forEach{operationCard(it)}
  }
@@ -104,9 +123,13 @@ class MainActivity:Activity(){
   val income=ops.filter{it.kind=="Доход"}.sumOf{it.amount}
   val spent=ops.filter{it.kind!="Доход"}.sumOf{it.amount}
   val c=card()
-  add(c,text("▣  "+name,16f,navy,true))
-  add(c,text("Прибыль  "+eur(income-spent),18f,if(income>=spent)green else red,true),9)
-  add(c,text("Доходы: "+eur(income)+"   Расходы: "+eur(spent),12f,muted),7)
+  add(c,text("▱   Объект "+name+"     ›",17f,navy,true))
+  add(c,text("Финансовый результат",12f,muted),12)
+  add(c,text(eur(income-spent),22f,if(income>=spent)green else red,true),5)
+  val strip=row().apply{background=shape(if(income>=spent)Color.rgb(234,248,241) else Color.rgb(255,240,242),12);setPadding(dp(12),dp(12),dp(12),dp(12))}
+  strip.addView(text("Доходы  "+eur(income),12f,green,true),LinearLayout.LayoutParams(0,-2,1f))
+  strip.addView(text("Расходы  "+eur(spent),12f,red,true))
+  add(c,strip,12)
   c.setOnClickListener{filter=name;page=2;render()}
   add(body,c,10)
  }

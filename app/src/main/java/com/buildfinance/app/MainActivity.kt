@@ -79,7 +79,7 @@ class MainActivity:ComponentActivity(){
   Scaffold(
    modifier=Modifier.fillMaxSize(),containerColor=Canvas,contentWindowInsets=WindowInsets.safeDrawing,
    topBar={
-    Row(Modifier.fillMaxWidth().background(Canvas).padding(horizontal=22.dp,vertical=14.dp),verticalAlignment=Alignment.CenterVertically){
+    Row(Modifier.fillMaxWidth().background(Canvas).statusBarsPadding().padding(horizontal=20.dp,vertical=12.dp),verticalAlignment=Alignment.CenterVertically){
      Surface(shape=RoundedCornerShape(14.dp),color=Navy,modifier=Modifier.size(44.dp)){
       Box(contentAlignment=Alignment.Center){Icon(Icons.Outlined.AccountBalance,contentDescription=null,tint=Gold,modifier=Modifier.size(26.dp))}
      }
@@ -92,7 +92,7 @@ class MainActivity:ComponentActivity(){
     }
    },
    bottomBar={
-    NavigationBar(containerColor=Color.White,tonalElevation=0.dp){
+    NavigationBar(containerColor=Color.White,tonalElevation=0.dp,windowInsets=WindowInsets.navigationBars){
      val tabs=listOf(Triple("Главная",Icons.Outlined.Home,0),Triple("Объекты",Icons.Outlined.Apartment,1),Triple("Операции",Icons.Outlined.ReceiptLong,2),Triple("Отчёты",Icons.Outlined.BarChart,3))
      tabs.forEach{(label,icon,index)->
       NavigationBarItem(selected=tab==index,onClick={tab=index},icon={Icon(icon,contentDescription=label)},label={Text(label,fontSize=11.sp)},colors=NavigationBarItemDefaults.colors(selectedIconColor=Blue,selectedTextColor=Blue,indicatorColor=Color(0xFFEDF2FF),unselectedIconColor=Muted,unselectedTextColor=Muted))
@@ -100,21 +100,21 @@ class MainActivity:ComponentActivity(){
     }
    }
   ){padding->
-   LazyColumn(modifier=Modifier.fillMaxSize().padding(padding),contentPadding=PaddingValues(start=20.dp,end=20.dp,top=10.dp,bottom=24.dp),verticalArrangement=Arrangement.spacedBy(14.dp)){
+   LazyColumn(modifier=Modifier.fillMaxSize().padding(padding),contentPadding=PaddingValues(start=20.dp,end=20.dp,top=8.dp,bottom=28.dp),verticalArrangement=Arrangement.spacedBy(12.dp)){
     when(tab){
      0->{
       item{
-       Column(Modifier.fillMaxWidth().background(Navy,Shape).padding(22.dp)){
+       Column(Modifier.fillMaxWidth().background(Navy,Shape).padding(horizontal=22.dp,vertical=19.dp)){
         Row(verticalAlignment=Alignment.CenterVertically){
          Text("ОБЩИЙ БАЛАНС",fontSize=12.sp,color=Color(0xFFBCC9DC),fontWeight=FontWeight.SemiBold,modifier=Modifier.weight(1f))
          Icon(Icons.Outlined.AccountBalanceWallet,contentDescription=null,tint=Gold)
         }
-        Spacer(Modifier.height(12.dp))
-        Text(euros(income-spent),fontSize=34.sp,fontWeight=FontWeight.Bold,color=Color.White,maxLines=1)
+        Spacer(Modifier.height(9.dp))
+        Text(euros(income-spent),fontSize=32.sp,fontWeight=FontWeight.Bold,color=Color.White,maxLines=1)
         Text("По всем объектам",fontSize=13.sp,color=Color(0xFFBCC9DC))
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(16.dp))
         HorizontalDivider(color=Color(0xFF35445C))
-        Spacer(Modifier.height(17.dp))
+        Spacer(Modifier.height(13.dp))
         Row(horizontalArrangement=Arrangement.spacedBy(10.dp)){
          SummaryMetric("ОБЪЕКТЫ",projects.size.toString(),Color.White,Modifier.weight(1f))
          SummaryMetric("ДОХОДЫ",euros(income),Color(0xFF70E0B9),Modifier.weight(1f))
@@ -123,10 +123,10 @@ class MainActivity:ComponentActivity(){
        }
       }
       item{
-       Row(horizontalArrangement=Arrangement.spacedBy(9.dp)){
+       Row(horizontalArrangement=Arrangement.spacedBy(8.dp)){
         QuickAction("Операция",Icons.Outlined.AddCircle,Modifier.weight(1f),true){selected=null;defaultCategory="Материалы";editing=true}
         QuickAction("Объекты",Icons.Outlined.Apartment,Modifier.weight(1f)){tab=1}
-        QuickAction("Работники",Icons.Outlined.Groups,Modifier.weight(1f)){tab=3}
+        QuickAction("Работники",Icons.Outlined.Groups,Modifier.weight(1f)){selected=null;defaultCategory="Работники";editing=true}
         QuickAction("Материалы",Icons.Outlined.Inventory2,Modifier.weight(1f)){selected=null;defaultCategory="Материалы";editing=true}
        }
       }
@@ -180,16 +180,16 @@ class MainActivity:ComponentActivity(){
  Column(modifier){Text(value,fontWeight=FontWeight.Bold,fontSize=15.sp,color=color,maxLines=1,overflow=TextOverflow.Ellipsis);Spacer(Modifier.height(5.dp));Text(label,fontSize=10.sp,color=Color(0xFFBCC9DC))}
 }
 @Composable private fun QuickAction(label:String,icon:androidx.compose.ui.graphics.vector.ImageVector,modifier:Modifier=Modifier,dark:Boolean=false,action:()->Unit){
- Surface(onClick=action,modifier=modifier.height(92.dp),shape=RoundedCornerShape(17.dp),color=if(dark)Navy else Color.White,border=if(dark)null else BorderStroke(1.dp,Color(0xFFE8ECF2))){
+ Surface(onClick=action,modifier=modifier.height(80.dp),shape=RoundedCornerShape(17.dp),color=if(dark)Navy else Color.White,border=if(dark)null else BorderStroke(1.dp,Color(0xFFE8ECF2))){
   Column(Modifier.fillMaxSize().padding(6.dp),verticalArrangement=Arrangement.Center,horizontalAlignment=Alignment.CenterHorizontally){
    Icon(icon,contentDescription=null,tint=if(dark)Color.White else Navy,modifier=Modifier.size(25.dp))
-   Spacer(Modifier.height(10.dp))
+   Spacer(Modifier.height(7.dp))
    Text(label,fontSize=11.sp,fontWeight=FontWeight.SemiBold,color=if(dark)Color.White else Navy,maxLines=1)
   }
  }
 }
 @Composable private fun SectionHeading(title:String,link:String?,action:()->Unit){
- Row(Modifier.fillMaxWidth().padding(top=10.dp),verticalAlignment=Alignment.CenterVertically){
+ Row(Modifier.fillMaxWidth().padding(top=7.dp),verticalAlignment=Alignment.CenterVertically){
   Text(title,fontSize=20.sp,fontWeight=FontWeight.Bold,modifier=Modifier.weight(1f))
   if(link!=null)TextButton(onClick=action){Text(link+" ›",fontSize=12.sp,color=Muted)}
  }
@@ -208,15 +208,15 @@ class MainActivity:ComponentActivity(){
  val inc=ops.filter{it.kind=="Доход"}.sumOf{it.amount}
  val out=ops.filter{it.kind!="Доход"}.sumOf{it.amount}
  Surface(onClick=action,shape=Shape,color=Color.White,border=BorderStroke(1.dp,Color(0xFFE9EDF3))){
-  Column(Modifier.fillMaxWidth().padding(19.dp)){
+  Column(Modifier.fillMaxWidth().padding(17.dp)){
    Row(verticalAlignment=Alignment.CenterVertically){Icon(Icons.Outlined.Apartment,contentDescription=null,tint=Blue,modifier=Modifier.size(20.dp));Spacer(Modifier.width(9.dp));Text(name,fontSize=17.sp,fontWeight=FontWeight.Bold,modifier=Modifier.weight(1f));Icon(Icons.Outlined.ChevronRight,contentDescription=null,tint=Muted)}
-   Spacer(Modifier.height(16.dp))
+   Spacer(Modifier.height(11.dp))
    Text("Финансовый результат",fontSize=12.sp,color=Muted)
    Text(euros(inc-out),fontSize=24.sp,fontWeight=FontWeight.Bold,color=if(inc>=out)Mint else Rose)
-   Spacer(Modifier.height(13.dp))
+   Spacer(Modifier.height(10.dp))
    Row(Modifier.fillMaxWidth().background(Canvas,RoundedCornerShape(12.dp)).padding(12.dp),horizontalArrangement=Arrangement.SpaceBetween){
-    Text("Доходы "+euros(inc),fontSize=12.sp,color=Mint)
-    Text("Расходы "+euros(out),fontSize=12.sp,color=Rose)
+    Text("Доходы "+euros(inc),fontSize=11.sp,color=Mint,maxLines=1,overflow=TextOverflow.Ellipsis,modifier=Modifier.weight(1f))
+    Spacer(Modifier.width(8.dp));Text("Расходы "+euros(out),fontSize=11.sp,color=Rose,maxLines=1,overflow=TextOverflow.Ellipsis,modifier=Modifier.weight(1f))
    }
   }
  }
